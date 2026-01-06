@@ -54,6 +54,7 @@ import { VideoGenerationConfig, AspectRatio, VideoAnalysisResult, VideoPlan, Ima
 import { VeoDemo } from './components/VeoDemo';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthModal } from './components/AuthModal';
+import { SettingsModal } from './components/SettingsModal';
 
 // --- Types for Workflow State ---
 type WorkflowStep = 'hero' | 'brand' | 'analysis' | 'generation';
@@ -62,7 +63,7 @@ type BrandVoice = 'Professional' | 'Gen-Z/Trendy' | 'Urgent/Sales' | 'Storytelle
 // --- Components ---
 
 // 0. NAVIGATION BAR (NEW)
-const Navbar = ({ onOpenAuth }: { onOpenAuth: () => void }) => {
+const Navbar = ({ onOpenAuth, onOpenSettings }: { onOpenAuth: () => void, onOpenSettings: () => void }) => {
     const [activeSection, setActiveSection] = useState<string>('hero');
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -147,6 +148,14 @@ const Navbar = ({ onOpenAuth }: { onOpenAuth: () => void }) => {
 
                 {/* RIGHT: Auth & Mobile Toggle */}
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={onOpenSettings}
+                        className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                        title="API Settings"
+                    >
+                        <Settings2 size={20} />
+                    </button>
+
                     {user ? (
                         <div className="hidden md:flex items-center gap-4">
                             <span className="text-xs text-slate-500 font-mono">{user.email}</span>
@@ -195,6 +204,12 @@ const Navbar = ({ onOpenAuth }: { onOpenAuth: () => void }) => {
                         </button>
                     ))}
                     <div className="h-px bg-white/10 my-2"></div>
+                    <button 
+                        onClick={() => { onOpenSettings(); setMobileMenuOpen(false); }}
+                        className="p-4 text-left text-slate-300 hover:text-white flex items-center gap-2"
+                    >
+                        <Settings2 size={16} /> API Settings
+                    </button>
                     {user ? (
                         <button onClick={signOut} className="p-4 text-left text-slate-300 hover:text-red-400">Sign Out</button>
                     ) : (
@@ -1244,11 +1259,15 @@ const App = () => {
     const [productDesc, setProductDesc] = useState("");
     const [analysisResult, setAnalysisResult] = useState<VideoAnalysisResult | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
     return (
         <AuthProvider>
             <div className="bg-charcoal min-h-screen text-slate-300">
-                <Navbar onOpenAuth={() => setIsAuthModalOpen(true)} />
+                <Navbar 
+                    onOpenAuth={() => setIsAuthModalOpen(true)} 
+                    onOpenSettings={() => setIsSettingsModalOpen(true)}
+                />
                 <Hero onStart={() => scrollToSection('brand-dna')} />
                 <BrandDNA 
                     onComplete={() => scrollToSection('market-intel')} 
@@ -1271,6 +1290,7 @@ const App = () => {
                 />
                 <Footer />
                 <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+                <SettingsModal isOpen={isSettingsModalOpen} onClose={() => setIsSettingsModalOpen(false)} />
             </div>
         </AuthProvider>
     );

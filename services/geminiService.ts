@@ -1,6 +1,23 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { VideoGenerationConfig, VideoAnalysisResult, VideoPlan, ImageSize } from "../types";
 
+// Helper to get API Key from storage or env
+const getApiKey = (): string => {
+  const localKey = localStorage.getItem('GEMINI_API_KEY');
+  if (localKey) return localKey;
+  // Fallback to process.env if available
+  return process.env.API_KEY || '';
+};
+
+// Helper to initialize AI client dynamically
+const getGenAI = (): GoogleGenAI => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please click the Settings icon and add your Gemini API Key.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
 // Helper to convert File to Base64
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -41,7 +58,7 @@ const extractJSON = (text: string): any => {
 };
 
 export const analyzeVideo = async (input: File | string): Promise<VideoAnalysisResult> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getGenAI();
   
   const analysisSchema: Schema = {
     type: Type.OBJECT,
@@ -207,7 +224,7 @@ export const generateEditDecisionList = async (
   customPrompt: string,
   brandInfo: string
 ): Promise<VideoPlan> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getGenAI();
 
   // Map assets to JSON context
   const userAssetsJson = assets.map((file, index) => ({
@@ -302,7 +319,7 @@ export const generateEditDecisionList = async (
 };
 
 export const generateVideo = async (config: VideoGenerationConfig): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getGenAI();
   
   try {
     const payload: any = {
@@ -335,7 +352,9 @@ export const generateVideo = async (config: VideoGenerationConfig): Promise<stri
       throw new Error("Failed to generate video URI.");
     }
 
-    return `${downloadLink}&key=${process.env.API_KEY}`;
+    // Append the API key used for generation to the download link
+    const apiKey = getApiKey();
+    return `${downloadLink}&key=${apiKey}`;
 
   } catch (error) {
     console.error("Video generation error:", error);
@@ -344,7 +363,7 @@ export const generateVideo = async (config: VideoGenerationConfig): Promise<stri
 };
 
 export const generateImage = async (prompt: string, aspectRatio: string = "9:16", referenceImageBase64?: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = getGenAI();
   
   try {
     const parts: any[] = [];
